@@ -5,7 +5,7 @@ from flask_restful import Api
 from wallet import WalletBalance
 from transaction import CreateTransaction, ValidateTransaction, ViewTransactions
 from block import ValidateBlock
-from Node import NewNode
+from Node import NewNode, InformBootstrap
 
 
 app = Flask(__name__)
@@ -14,6 +14,7 @@ CORS(app)
 api = Api(prefix='/nbc')
 
 api.add_resource(NewNode, '/node/new')
+api.add_resource(InformBootstrap, '/node/hello_bootstrap')
 api.add_resource(WalletBalance, '/wallet/balance')
 api.add_resource(CreateTransaction, '/transaction/create')
 api.add_resource(ValidateTransaction, '/transaction/validate')

@@ -1,35 +1,68 @@
-from flask import make_response, abort, request
+from flask import jsonify, request
+from os.path import exists
+
 from wallet import Wallet
-from block import Blockchain
+from block import Block, Blockchain
+from transaction import Transaction
 
 
 class NewNode(Resource):
 
 	def post(self):
-		args = self.parser.parse_args()
-		ip = args['ip']
-		port = args['port']
-        isbootstrap = args['is_bootstrap']
-        max_nodes = args['max_nodes']
-        NBC = args['NBC']
+        isbootstrap = request.form['is_bootstrap']
+        if isbootstrap:
+        	if not exists('bootstrapconfig.txt'):
+        		response = {'msg': 'bootstrapconfig.txt not available'}
+        		return jsonify(response), 400
+        	with open('bootstrapconfig.txt','r') as b:
+        		ip = b.readline().strip()
+        		port = b.readline().strip()
+        else:
+        	ip = request.form['ip']
+        	port = request.form['port']
+        max_nodes = request.form['max_nodes']
+        NBC = request.form['NBC']
+        capacity = request.form['capacity']
+        difficulty = request.form['difficulty']
 
-        n = Node(ip, port, is_bootstrap, max_nodes, NBC)
+        running = Node(ip, port, is_bootstrap, max_nodes, NBC, capacity, difficulty)
+
+        response = {'msg': 'OK'}
+        return jsonify(response), 200
+
+
+class InformBootstrap(Resource):
+
+	def post(self):
+		args = self.parser.parse_args()
+		node_dict = request.form['node_dict']
+
+		code, msg, idx, blockchain = running.register_node_to_ring(node_dict)
+		if code == 200:
+			response = {'msg': msg, 'id': idx, 'blockchain': blockchain}
+		else:
+			response = {'msg': msg}
+		return jsonify(response), 200
+
 
 
 class Node:
 
-	def __init__(self, ip, port, is_bootstrap=False, max_nodes=5, NBC=100):
+	def __init__(self, ip, port, is_bootstrap=False, max_nodes=5, NBC=100, capacity=1, difficulty=4):
 		self.ip = ip
 		self.port = port
 		self.bootstrap = is_bootstrap
 		self.max_nodes = max_nodes
 		self.NBC = NBC
+		self.capacity = capacity
+		self.difficulty = difficulty
 		self.wallet = Wallet()
 		self.ring = []
-		self.blockchain = Blockchain()
 
 		if self.bootstrap:
 			i_am_bootstrap()
+		else:
+
 
 
 		##set
@@ -44,22 +77,45 @@ class Node:
 	def i_am_bootstrap(self):
 		self.id = 0
 		self.current_nodes = 1
-		node_dict = {'id': self.id, 'ip': self.ip, 'port': self.port, 'address': self.wallet.address, 'balance': self.wallet.balance()}
+		node_dict = {'id': self.id, 'ip': self.ip, 'port': self.port, 'address': self.wallet.address, 'utxos': ?}
 		self.ring.append(node_dict)
-		self.blockchain.add_block(self.genesis_block())
+		self.blockchain = Blockchain([self.genesis_block()])
 
 	def genesis_block(self):
 		amount = self.NBC * self.max_nodes
-		
+		previous_hash = '1'
+		nonce = '0'
+		idx = 0
+		timestamp = str(datetime.now())
+		transactions = [Transaction()]
+		return Block(idx, transactions, nonce, previous_hash, self.capacity)
+
+	def node_already_exists(self, node_dict):
+		msg = None
+		for node in self.ring:
+			if node_dict['ip'] == node.ip and node_dict['port'] == node.port:
+				msg = "You are already in with another wallet"
+			if node_dict['address'] == node.wallet.address:
+				msg = "I already have your wallet's address"
+		return msg
 
 	def create_new_block():
 
 	def create_wallet():
 		#create a wallet for this node, with a public key and a private key
 
-	def register_node_to_ring():
-		#add this node to the ring, only the bootstrap node can add a node to the ring after checking his wallet and ip:port address
-		#bottstrap node informs all other nodes and gives the request node an id and 100 NBCs
+	def register_node_to_ring(self, node_dict):
+		if not self.bootstrap:
+			return 400, "I am sorry, bootstrap is not here", None, None
+		if self.max_nodes == len(self.ring):
+			return 400, "Sorry we are full, " + str(self.max_nodes) + " nodes at a time", None, None
+		msg = self.node_already_exists(node_dict)
+		if msg: return 400, msg, None, None
+
+		idx = len(self.ring)
+		node_dict['id': idx]
+		self.ring.append(node_dict)
+		return 200, "OK", idx self.blockchain
 
 
 	def create_transaction(sender, receiver, signature):
