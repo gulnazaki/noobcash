@@ -30,4 +30,4 @@ class Wallet:
 		self.utxos = dict()
 
 	def balance(self):
-        return sum([nbc for _, recipient, nbc in self.utxos.values() if recipient == self.address])
+		return sum([nbc for _, recipient, nbc in self.utxos.values() if recipient == self.address])

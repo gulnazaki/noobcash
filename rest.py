@@ -2,7 +2,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_restful import Api
 
-from wallet import WalletBalance
+# from wallet import WalletBalance
+import wallet
 from transaction import CreateTransaction, ValidateTransaction, ViewTransactions
 from block import ValidateBlock
 from Node import NewNode, InformBootstrap

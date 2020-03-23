@@ -34,7 +34,7 @@ class Transaction:
 
 
     def choose_utxos(self, utxos):
-
+        raise NotImplementedError
 
     def update_utxos(self, ring):
         for output_id, output in self.outputs.items():

@@ -1,15 +1,50 @@
 import requests
 
+
+PORT = 5000
+BASE = f'http://localhost:{PORT}'
+
+def getPort():
+	global PORT
+	global BASE
+	try:
+		keys = []
+		vals = []
+		with open('./backendconfig', 'r') as f:
+			config_txt = f.read() 
+			for line in config_txt.splitlines():
+				words = line.split()
+				k, v = words[0], words[1]
+				keys.append(k)
+				vals.append(v)
+				if k.lower() == 'PORT'.lower():
+					PORT = v
+					BASE = f'http://localhost:{PORT}'
+					break
+			# config_dict = dict( zip(keys, vals ))
+	except:
+		pass
+
+getPort()
+
+def HandleRequest(request):
+	msg = request.msg
+	code = request.status_code
+	if code != 200:
+		print('error')
+	else:
+		pass
+	return
+
 def transaction(args):
-	
-	
-	# print(args.recip_addr, args.amount)
 	return 0
 
 def view(args):
-	# print('view')
+	url = f'{BASE}/transaction/view'
+	r = requests.get(url)
 	return 0
 
 def balance(args):
-	# print('balance')
+	url = f'{BASE}/wallet/balance'
+	r = requests.get(url)
 	return 0
