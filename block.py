@@ -22,9 +22,19 @@ class Block:
 	def add_transaction(transaction transaction, blockchain blockchain):
 		#add a transaction to the block
 
+	def validate(self, difficulty, prev_hash):
+		return self.hash.startswith('0'*difficulty) and prev_hash == self.previous_hash
+
 
 class Blockchain:
 
 	def __init__(self, block_list=[]):
 		self.block_list = block_list
 		self.size = len(self.block_list)
+
+	def validate(self, difficulty):
+		valid = True
+		for idx, block in enumerate(self.block_list[1:]):
+			prev_hash = self.block_list[idx-1].hash
+			valid = block.validate(difficulty, prev_hash)
+		return valid

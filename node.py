@@ -1,5 +1,6 @@
 from flask import jsonify, request
 from os.path import exists
+import requests as r
 
 from wallet import Wallet
 from block import Block, Blockchain
@@ -34,16 +35,29 @@ class NewNode(Resource):
 class InformBootstrap(Resource):
 
 	def post(self):
-		args = self.parser.parse_args()
-		node_dict = request.form['node_dict']
+		node_dict = request.form
 
 		code, msg, idx, blockchain = running.register_node_to_ring(node_dict)
-		if code == 200:
-			response = {'msg': msg, 'id': idx, 'blockchain': blockchain}
-		else:
+		if code != 200:
 			response = {'msg': msg}
-		return jsonify(response), 200
+		else:
+			response = {'msg': msg, 'id': idx, 'blockchain': blockchain}
+			if idx == running.max_nodes - 1:
+				running.broadcast_ring()
+		return jsonify(response), code
 
+
+class BroadcastRing(Resource):
+
+	def post(self):
+		for idx, node in request.form.items():
+			if idx in running.ring:
+				msg = "I know about node " + str(idx) + " already"
+				return jsonify({'msg': msg}), 400
+			else:
+				running.ring[idx] = node
+		msg = "OK"
+		return jsonify({'msg': msg}), 200
 
 
 class Node:
@@ -57,29 +71,21 @@ class Node:
 		self.capacity = capacity
 		self.difficulty = difficulty
 		self.wallet = Wallet()
-		self.ring = []
+		self.ring = {}
+		node_dict = {'ip': self.ip, 'port': self.port, 'address': self.wallet.address, 'utxos': {}}
 
 		if self.bootstrap:
-			i_am_bootstrap()
+			self.i_am_bootstrap()
 		else:
+			self.inform_bootstrap()
+			self.blockchain.validate(self.difficulty)
 
-
-
-		##set
-
-		#self.chain
-		#self.current_id_count
-		#self.NBCs
-		#self.wallet
-
-		#slef.ring[]   #here we store information for every node, as its id, its address (ip:port) its public key and its balance 
 
 	def i_am_bootstrap(self):
 		self.id = 0
 		self.current_nodes = 1
-		node_dict = {'id': self.id, 'ip': self.ip, 'port': self.port, 'address': self.wallet.address, 'utxos': ?}
-		self.ring.append(node_dict)
 		self.blockchain = Blockchain([self.genesis_block()])
+		self.ring[self.id] = node_dict
 
 	def genesis_block(self):
 		amount = self.NBC * self.max_nodes
@@ -87,22 +93,31 @@ class Node:
 		nonce = '0'
 		idx = 0
 		timestamp = str(datetime.now())
-		transactions = [Transaction()]
+		transactions = [Transaction(sender_address='0', sender_private_key=None, receiver_address=self.wallet.address, amount=amount, self.ring).to_dict()]
 		return Block(idx, transactions, nonce, previous_hash, self.capacity)
+
+	def inform_bootstrap(self):
+		with open('bootstrapconfig.txt','r') as b:
+        	ip = b.readline().strip()
+        	port = b.readline().strip()
+        url = 'http://' + ip + ':' + port + '/node/hello_bootstrap'
+        response = r.post(url, data=node_dict)
+        if response.status_code != 200:
+        	print("Bootstrap says:\n" + response.json()['msg'])
+        	exit()
+        else:
+        	self.id = response.json()['id']
+        	self.blockchain = response.json()['blockchain']
+        	print("I am in with id " + self.id)
 
 	def node_already_exists(self, node_dict):
 		msg = None
-		for node in self.ring:
+		for node in self.ring.values():
 			if node_dict['ip'] == node.ip and node_dict['port'] == node.port:
 				msg = "You are already in with another wallet"
 			if node_dict['address'] == node.wallet.address:
 				msg = "I already have your wallet's address"
 		return msg
-
-	def create_new_block():
-
-	def create_wallet():
-		#create a wallet for this node, with a public key and a private key
 
 	def register_node_to_ring(self, node_dict):
 		if not self.bootstrap:
@@ -113,12 +128,32 @@ class Node:
 		if msg: return 400, msg, None, None
 
 		idx = len(self.ring)
-		node_dict['id': idx]
-		self.ring.append(node_dict)
-		return 200, "OK", idx self.blockchain
+		self.ring[idx] = node_dict
+		return 200, "OK", idx, self.blockchain
 
+	def broadcast_ring():
+		for node in self.ring.values()[1:]:
+            url = 'http://' + node['ip'] + ':' + node['port'] + '/node/all_in'
+            response = r.post(url, data=self.ring)
+            if response.status_code != 200:
+                print("Failed broadcasting ring, problem with " + node['ip'] + ":" + node['port'])
+                print("Node says:\n" + response.json()['msg'])
+                exit()
+            else:
+            	print("All nodes are informed, let\'s start")
 
-	def create_transaction(sender, receiver, signature):
+    def get_id(self, public_key=None):
+        if public_key is None:
+            return None
+        for node in self.ring:
+            if node['public_key'] == public_key:
+                return node['id']
+        return None
+
+	def create_new_block():
+
+	def create_wallet():
+		#create a wallet for this node, with a public key and a private key	def create_transaction(sender, receiver, signature):
 		#remember to broadcast it
 
 
