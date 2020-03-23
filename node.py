@@ -10,26 +10,26 @@ from transaction import Transaction
 class NewNode(Resource):
 
 	def post(self):
-		isbootstrap = request.form['is_bootstrap']
-		if isbootstrap:
-			if not exists('bootstrapconfig.txt'):
-				response = {'msg': 'bootstrapconfig.txt not available'}
-				return jsonify(response), 400
-			with open('bootstrapconfig.txt','r') as b:
-				ip = b.readline().strip()
-				port = b.readline().strip()
-		else:
-			ip = request.form['ip']
-			port = request.form['port']
-		max_nodes = request.form['max_nodes']
-		NBC = request.form['NBC']
-		capacity = request.form['capacity']
-		difficulty = request.form['difficulty']
+        isbootstrap = request.form['is_bootstrap']
+        if isbootstrap:
+        	if not exists('bootstrapconfig.txt'):
+        		response = {'msg': 'bootstrapconfig.txt not available'}
+        		return jsonify(response), 400
+        	with open('bootstrapconfig.txt','r') as b:
+        		ip = b.readline().strip()
+        		port = b.readline().strip()
+        else:
+        	ip = request.form['ip']
+        	port = request.form['port']
+        max_nodes = request.form['max_nodes']
+        NBC = request.form['NBC']
+        capacity = request.form['capacity']
+        difficulty = request.form['difficulty']
 
-		running = Node(ip, port, is_bootstrap, max_nodes, NBC, capacity, difficulty)
+        running = Node(ip, port, is_bootstrap, max_nodes, NBC, capacity, difficulty)
 
-		response = {'msg': 'OK'}
-		return jsonify(response), 200
+        response = {'msg': 'OK'}
+        return jsonify(response), 200
 
 
 class InformBootstrap(Resource):
@@ -98,17 +98,17 @@ class Node:
 
 	def inform_bootstrap(self):
 		with open('bootstrapconfig.txt','r') as b:
-			ip = b.readline().strip()
-			port = b.readline().strip()
-		url = 'http://' + ip + ':' + port + '/node/hello_bootstrap'
-		response = r.post(url, data=node_dict)
-		if response.status_code != 200:
-			print("Bootstrap says:\n" + response.json()['msg'])
-			exit()
-		else:
-			self.id = response.json()['id']
-			self.blockchain = response.json()['blockchain']
-			print("I am in with id " + self.id)
+        	ip = b.readline().strip()
+        	port = b.readline().strip()
+        url = 'http://' + ip + ':' + port + '/node/hello_bootstrap'
+        response = r.post(url, data=node_dict)
+        if response.status_code != 200:
+        	print("Bootstrap says:\n" + response.json()['msg'])
+        	exit()
+        else:
+        	self.id = response.json()['id']
+        	self.blockchain = response.json()['blockchain']
+        	print("I am in with id " + self.id)
 
 	def node_already_exists(self, node_dict):
 		msg = None
@@ -133,22 +133,22 @@ class Node:
 
 	def broadcast_ring():
 		for node in self.ring.values()[1:]:
-			url = 'http://' + node['ip'] + ':' + node['port'] + '/node/all_in'
-			response = r.post(url, data=self.ring)
-			if response.status_code != 200:
-				print("Failed broadcasting ring, problem with " + node['ip'] + ":" + node['port'])
-				print("Node says:\n" + response.json()['msg'])
-				exit()
-			else:
-				print("All nodes are informed, let\'s start")
+            url = 'http://' + node['ip'] + ':' + node['port'] + '/node/all_in'
+            response = r.post(url, data=self.ring)
+            if response.status_code != 200:
+                print("Failed broadcasting ring, problem with " + node['ip'] + ":" + node['port'])
+                print("Node says:\n" + response.json()['msg'])
+                exit()
+            else:
+            	print("All nodes are informed, let\'s start")
 
-	def get_id(self, public_key=None):
-		if public_key is None:
-			return None
-		for node in self.ring:
-			if node['public_key'] == public_key:
-				return node['id']
-		return None
+    def get_id(self, public_key=None):
+        if public_key is None:
+            return None
+        for node in self.ring:
+            if node['public_key'] == public_key:
+                return node['id']
+        return None
 
 	def create_new_block():
 
