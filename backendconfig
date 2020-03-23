@@ -1,0 +1,5 @@
+IP 127.0.0.1
+PORT 5000
+PUBLIC_KEY /path/to/public/key
+PRIVATE_KEY /path/to/private/key
+WALLET /path/to/wallet
