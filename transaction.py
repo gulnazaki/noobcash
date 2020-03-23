@@ -25,22 +25,20 @@ class Transaction:
             idx, output = self.output(self.receiver_address, self.amount)
             self.outputs = {idx: output}
             self.signature = "genesis"
-            self.update_utxos(ring)
         else:
-            if not utxos:
-                raise ValueError("You have to provide a non-empty utxos dictionary")
-            if not self.choose_utxos(utxos):
+            if not self.remove_utxos(ring):
                 raise ValueError("You don't have enough money, I am sorry")
 
+    self.update_utxos(ring)
 
-    def choose_utxos(self, utxos):
+    def remove_utxos(self, ring):
 
 
     def update_utxos(self, ring):
         for output_id, output in self.outputs.items():
             for node in ring.values():
                 if output['recipient'] == node['address']:
-                    node['utxos'][output_id] = 
+                    node['utxos'][output_id] = output
 
     def output(self, recipient, amount):
         data = self.transaction_id + recipient + amount
