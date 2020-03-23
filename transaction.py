@@ -20,31 +20,58 @@ class Transaction:
         self.receiver_address = receiver_address
         self.amount = amount
         self.transaction_id = self.my_hash()
+        self.inputs = []
+        self.outputs = OrderedDict()
         if self.sender_address == '0':
-            self.inputs = []
-            idx, output = self.output(self.receiver_address, self.amount)
-            self.outputs = {idx: output}
+            self.add_output(self.receiver_address, self.amount)
             self.signature = "genesis"
         else:
-            if not self.remove_utxos(ring):
-                raise ValueError("You don't have enough money, I am sorry")
+            self.choose_utxos(ring)
+            self.sign_transaction()
 
-    self.update_utxos(ring)
+        self.update_ring_utxos(ring)
 
-    def remove_utxos(self, ring):
+    def choose_utxos(self, ring):
+        current_amount = 0
+        if self.amount == 0: return
+        for node in ring.values():
+            if self.sender_address == node['address']:
+                if not node['utxos']:
+                    raise ValueError("You have no UTXOs")
+                for utxo_id, utxo in node['utxos'].items():
+                    self.inputs.append(utxo_id)
+                    change = current_amount + utxo['amount'] - self.amount
+                    
+                    if change == 0:
+                        self.add_output(self.receiver_address, self.amount)
+                        return
+                    elif change > 0:
+                        self.add_output(self.receiver_address, self.amount)
+                        self.add_output(self.sender_address, change)
+                        return
 
+                raise ValueError("You don't have enough NBCs for this transaction")
 
-    def update_utxos(self, ring):
+        raise ValueError("Sender doesn't exist in ring")
+
+    def update_ring_utxos(self, ring):
         for output_id, output in self.outputs.items():
             for node in ring.values():
                 if output['recipient'] == node['address']:
                     node['utxos'][output_id] = output
+                    break
 
-    def output(self, recipient, amount):
+        for node in ring.values():
+            if node['address'] == self.sender_address:
+                for utxo in self.inputs:
+                    node['utxos'].pop(utxo)
+                return
+
+    def add_output(self, recipient, amount):
         data = self.transaction_id + recipient + amount
         idx = sha256(data.encode('ascii')).hexdigest()
         output = {'transaction_id': self.transaction_id, 'recipient': recipient, 'amount': amount}
-        return idx, output    
+        self.outputs[idx] = output
     
     def to_dict(self):
         d = OrderedDict()
