@@ -27,7 +27,7 @@ class Transaction:
             self.signature = "genesis"
         else:
             self.choose_utxos(ring)
-            self.sign_transaction()
+            self.sign_transaction(sender_private_key)
 
         self.update_ring_utxos(ring)
 
@@ -84,8 +84,8 @@ class Transaction:
         data = self.self.sender_address + self.recipient_address + str(self.amount)
         return sha256(data.encode('ascii')).hexdigest()        
 
-    def sign_transaction(self):
-        signer = PKCS1_v1_5.new(self.sender_private_key)
+    def sign_transaction(self, sender_private_key):
+        signer = PKCS1_v1_5.new(sender_private_key)
         h = SHA.new(json.dumps(self.to_dict()).encode('utf8'))
         self.signature = hexlify(signer.sign(h)).decode('ascii')
        
