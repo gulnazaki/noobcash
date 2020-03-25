@@ -73,11 +73,16 @@ class Transaction:
         output = {'transaction_id': self.transaction_id, 'recipient': recipient, 'amount': amount}
         self.outputs[idx] = output
     
-    def to_dict(self):
+    def to_dict(self, to_be_hashed=False):
         d = OrderedDict()
         d['sender_address'] = self.sender_address
         d['receiver_address'] = self.receiver_address
         d['amount'] = self.amount
+        if not to_be_hashed:
+            d['transaction_id'] = self.transaction_id
+            d['inputs'] = self.inputs
+            d['outputs'] = self.outputs
+            d['signature'] = self.signature
         return d
 
     def my_hash(self):
@@ -86,6 +91,6 @@ class Transaction:
 
     def sign_transaction(self, sender_private_key):
         signer = PKCS1_v1_5.new(sender_private_key)
-        h = SHA.new(json.dumps(self.to_dict()).encode('utf8'))
+        h = SHA.new(json.dumps(self.to_dict(to_be_hashed=True)).encode('utf8'))
         self.signature = hexlify(signer.sign(h)).decode('ascii')
        
