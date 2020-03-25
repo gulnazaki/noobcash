@@ -8,5 +8,5 @@ class Wallet:
 
 		key = RSA.generate(4096)
 		self.private_key = key
-		self.public_key = key.public_key()
+		self.public_key = key.publickey()
 		self.address = hexlify(self.public_key.exportKey(format='DER')).decode('ascii')

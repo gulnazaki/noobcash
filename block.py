@@ -19,8 +19,9 @@ class Block:
 		return sha256(data.encode('ascii')).hexdigest()
 
 
-	def add_transaction(transaction transaction, blockchain blockchain):
+	def add_transaction(transaction, blockchain ):
 		#add a transaction to the block
+		return
 
 	def validate(self, difficulty, prev_hash):
 		return self.hash.startswith('0'*difficulty) and prev_hash == self.previous_hash
