@@ -1,5 +1,5 @@
 import requests
-
+import json, csv
 
 PORT = 5000
 BASE = f'http://localhost:{PORT}'
@@ -11,7 +11,7 @@ def getPort():
 		keys = []
 		vals = []
 		with open('./bootstrapconfig.txt', 'r') as f:
-			config_txt = f.read() 
+			config_txt = f.read()
 			for line in config_txt.splitlines():
 				words = line.split()
 				k, v = words[0], words[1]
@@ -41,7 +41,8 @@ def transaction(args):
 	sender_addr = args.sender_addr
 	amount = args.amount
 	url = f'{BASE}/transaction/create'
-	r = requests.post(url, )
+	data = { 'recipient':recip_addr, 'amount':amount}
+	r = requests.post(url, data = data)
 	HandleRequest(r)
 	return 0
 
