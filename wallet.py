@@ -1,5 +1,5 @@
 from binascii import hexlify
-from Crypto.PublicKey import RSA
+from Cryptodome.PublicKey import RSA
 
 
 class Wallet:

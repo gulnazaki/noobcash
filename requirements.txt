@@ -13,7 +13,7 @@ Jinja2==2.11.1
 MarkupSafe==1.1.1
 Naked==0.1.31
 pkg-resources==0.0.0
-pycrypto==2.6.1
+pycryptodomex==3.9.7
 pytz==2019.3
 PyYAML==5.3.1
 requests==2.23.0

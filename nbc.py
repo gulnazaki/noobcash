@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument('-ip', '--ip-addr', required=True, type=str, help='IP address')
-    parser.add_argument('-p', '--port', default=5000, type=int, help='Port to listen on')
+    parser.add_argument('-p', '--port', default='5000', type=str, help='Port to listen on')
     parser.add_argument('-bp', '--bootstrap', action='store_true', help='This node will be bootstrap')
     parser.add_argument('-mn', '--max-nodes', default=5, type=int, help='The number of nodes the network will consist of')
     parser.add_argument('-nbc', '--NBC', default=100, type=int, help='The number of NBCs each node will have when they all connect')

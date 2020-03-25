@@ -1,14 +1,7 @@
 from collections import OrderedDict
 from hashlib import sha256
-
-import binascii
-
-import Crypto
-import Crypto.Random
-from Crypto.Hash import SHA
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-
+from Cryptodome.Hash import SHA
+from Cryptodome.Signature import PKCS1_v1_5
 import requests
 from flask import Flask, jsonify, request, render_template
 
@@ -68,7 +61,7 @@ class Transaction:
                 return
 
     def add_output(self, recipient, amount):
-        data = self.transaction_id + recipient + amount
+        data = self.transaction_id + recipient + str(amount)
         idx = sha256(data.encode('ascii')).hexdigest()
         output = {'transaction_id': self.transaction_id, 'recipient': recipient, 'amount': amount}
         self.outputs[idx] = output
@@ -86,7 +79,7 @@ class Transaction:
         return d
 
     def my_hash(self):
-        data = self.self.sender_address + self.recipient_address + str(self.amount)
+        data = self.sender_address + self.receiver_address + str(self.amount)
         return sha256(data.encode('ascii')).hexdigest()        
 
     def sign_transaction(self, sender_private_key):
