@@ -45,8 +45,8 @@ if __name__ == '__main__':
         print('Provide bootstrap\'s IP and port at bootstrapconfig.txt')
         exit()
     with open('bootstrapconfig.txt','r') as b:
-        bootstrap_ip = b.readline().strip()
-        bootstrap_port = b.readline().strip()
+        bootstrap_ip = b.readline().split(" ")[1].strip()
+        bootstrap_port = b.readline().split(" ")[1].strip()
 
     if args.bootstrap and (ip != bootstrap_ip or port != bootstrap_port):
         print('IP and port must match those at bootstrapconfig.txt')
