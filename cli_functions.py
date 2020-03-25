@@ -10,7 +10,7 @@ def getPort():
 	try:
 		keys = []
 		vals = []
-		with open('./backendconfig', 'r') as f:
+		with open('./bootstrapconfig.txt', 'r') as f:
 			config_txt = f.read() 
 			for line in config_txt.splitlines():
 				words = line.split()
@@ -37,6 +37,12 @@ def HandleRequest(request):
 	return
 
 def transaction(args):
+	recip_addr = args.recip_addr
+	sender_addr = args.sender_addr
+	amount = args.amount
+	url = f'{BASE}/transaction/create'
+	r = requests.post(url, )
+	HandleRequest(r)
 	return 0
 
 def view(args):
