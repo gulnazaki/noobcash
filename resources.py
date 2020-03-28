@@ -26,7 +26,12 @@ class ViewTransactions(Resource):
 		self.node = kwargs['node']
 
 	def get(self):
-		return
+		try:
+			tx_list = self.node.view_transactions()
+		except:
+			return json.dumps({'msg': "Error"}), 400
+		
+		return json.dumps({'msg': "OK", 'tx_list': tx_list}), 200
 
 
 class Balance(Resource):
@@ -40,7 +45,7 @@ class Balance(Resource):
 		except:
 			return json.dumps({'msg': "Error"}), 400
 		
-		return json.dumps({'msg': balance}), 200
+		return json.dumps({'msg': "OK", 'balance': balance}), 200
 
 
 class WelcomeNode(Resource):

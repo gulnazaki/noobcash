@@ -21,7 +21,7 @@ class Node:
         self.difficulty = difficulty
         self.bootstrap_ip = bootstrap_ip
         self.bootstrap_port = bootstrap_port
-        
+
         self.wallet = Wallet()
         self.tx_pool = OrderedDict()
         self.node_dict = {'ip': self.ip, 'port': self.port, 'address': self.wallet.address, 'utxos': OrderedDict()}
@@ -44,7 +44,7 @@ class Node:
     def genesis_block(self):
         amount = self.NBC * self.max_nodes
         transactions = [Transaction(sender_address='0', sender_private_key=None, receiver_address=self.wallet.address, amount=amount, ring=self.ring).to_dict()]
-        
+
         return Block(idx=0, transactions=transactions, previous_hash='1', capacity=self.capacity, nonce='0')
 
     def inform_bootstrap(self):
@@ -166,10 +166,13 @@ class Node:
     def wallet_balance(self):
         return sum(utxo['amount'] for utxo in self.node_dict['utxos'].values())
 
+    def view_transactions(self):
+        return self.blockchain.block_list[-1].transactions
+
     #def valid_proof(.., difficulty=MINING_DIFFICULTY):
     #    return
 
-    #concencus functions
+    #consensus functions
 
 
     def valid_chain(self, chain):
