@@ -20,7 +20,7 @@ class Node:
         self.difficulty = difficulty
         self.bootstrap_ip = bootstrap_ip
         self.bootstrap_port = bootstrap_port
-        
+
         self.wallet = Wallet()
         self.tx_pool = OrderedDict()
         self.node_dict = {'ip': self.ip, 'port': self.port, 'address': self.wallet.address, 'utxos': OrderedDict()}
@@ -42,7 +42,7 @@ class Node:
     def genesis_block(self):
         amount = self.NBC * self.max_nodes
         transactions = [Transaction(sender_address='0', sender_private_key=None, receiver_address=self.wallet.address, amount=amount, ring=self.ring).to_dict()]
-        
+
         return Block(idx=0, transactions=transactions, previous_hash='1', capacity=self.capacity, nonce='0')
 
     def inform_bootstrap(self):
@@ -71,7 +71,7 @@ class Node:
         if self.max_nodes == len(self.ring):
             return 400, "Sorry we are full, " + str(self.max_nodes) + " nodes at a time", None, None
         msg = self.node_already_exists(node_dict)
-        if msg: 
+        if msg:
             return 400, msg, None, None
 
         idx = len(self.ring)
@@ -87,7 +87,7 @@ class Node:
         num_of_nodes = len(node_list)
         url_list = ['http://' + node['ip'] + ':' + node['port'] + endpoint for node in node_list]
         data_list = [data] * num_of_nodes
-        
+
         p = Pool(num_of_nodes)
 
         def send_stuff(url, data):
@@ -95,7 +95,7 @@ class Node:
             return response.status_code == 200
 
         successful = sum(p.starmap(send_stuff, zip(url_list, data_list)))
-        
+
         return successful == num_of_nodes
 
     def broadcast_ring(self):
@@ -108,11 +108,11 @@ class Node:
 
     def create_transaction(self, recipient, amount):
         try:
-            tx = Transaction(sender_address=self.wallet.address, sender_private_key=self.wallet.private_key, 
+            tx = Transaction(sender_address=self.wallet.address, sender_private_key=self.wallet.private_key,
                              receiver_address=recipient, amount=amount, ring=self.ring).to_dict
         except ValueError as e:
             return False, e
-        
+
         self.add_to_pool(tx)
         return self.broadcast_transaction(tx)
 
@@ -139,7 +139,7 @@ class Node:
     def add_transaction_to_block():
         #if enough transactions  mine
         return
-    
+
     def create_new_block():
     	return
 
@@ -148,14 +148,17 @@ class Node:
 
     def broadcast_block():
     	return
-        
+
     def wallet_balance(self):
         return sum(utxo['amount'] for utxo in self.ring[self.id]['utxos'].values())
+
+    def view_transactions(self):
+        return self.blockchain.block_list[-1]
 
     #def valid_proof(.., difficulty=MINING_DIFFICULTY):
     #	return
 
-    #concencus functions
+    #consensus functions
 
 
     def valid_chain(self, chain):
