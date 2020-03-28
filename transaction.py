@@ -1,28 +1,35 @@
 from collections import OrderedDict
+from binascii import hexlify, unhexlify
 from hashlib import sha256
 from Cryptodome.Hash import SHA
 from Cryptodome.Signature import PKCS1_v1_5
-import requests
-from flask import Flask, jsonify, request, render_template
+from Cryptodome.PublicKey import RSA
+import json
 
 
 class Transaction:
 
-    def __init__(self, sender_address, sender_private_key, receiver_address, amount, ring):
+    def __init__(self, sender_address, sender_private_key, receiver_address, amount, ring, signature=None, inputs=None, outputs=None):
         self.sender_address = sender_address
         self.receiver_address = receiver_address
         self.amount = amount
         self.transaction_id = self.my_hash()
-        self.inputs = []
-        self.outputs = OrderedDict()
-        if self.sender_address == '0':
-            self.add_output(self.receiver_address, self.amount)
-            self.signature = "genesis"
+        if signature:
+            self.inputs = inputs
+            self.outputs = outputs
+            self.verify_signature(signature)
+            self.signature = signature
         else:
-            self.choose_utxos(ring)
-            self.sign_transaction(sender_private_key)
+            self.inputs = []
+            self.outputs = OrderedDict()
+            if self.sender_address == '0':
+                self.add_output(self.receiver_address, self.amount)
+                self.signature = "genesis"
+            else:
+                self.choose_utxos(ring)
+                self.sign_transaction(sender_private_key)
 
-        self.update_ring_utxos(ring)
+            self.update_ring_utxos(ring)
 
     def choose_utxos(self, ring):
         current_amount = 0
@@ -83,7 +90,13 @@ class Transaction:
         return sha256(data.encode('ascii')).hexdigest()        
 
     def sign_transaction(self, sender_private_key):
-        signer = PKCS1_v1_5.new(sender_private_key)
+        signer = PKCS1_v1_5.new(RSA.importKey(unhexlify(sender_private_key)))
         h = SHA.new(json.dumps(self.to_dict(to_be_hashed=True)).encode('utf8'))
         self.signature = hexlify(signer.sign(h)).decode('ascii')
-       
+
+    def verify_signature(self, signature):
+        public_key = RSA.importKey(unhexlify(self.sender_address))
+        verifier = PKCS1_v1_5.new(public_key)
+        h = SHA.new(json.dumps(self.to_dict(to_be_hashed=True)).encode('utf8'))
+        if not verifier.verify(h, unhexlify(signature)):
+            raise ValueError("You are no who you appear to be mister")
