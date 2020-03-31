@@ -24,8 +24,7 @@ class Node:
 
         self.wallet = Wallet()
         self.tx_pool = OrderedDict()
-        self.node_dict = {'ip': self.ip, 'port': self.port, 'address': self.wallet.address, 'utxos': OrderedDict()}
-        self.ring = OrderedDict()
+        self.node_dict = {'ip': self.ip, 'port': self.port, 'address': self.wallet.address}
 
         self.mine_process = None
 
@@ -38,7 +37,8 @@ class Node:
 
     def i_am_bootstrap(self):
         self.id = 0
-        self.ring[0] = self.node_dict
+        self.node_dict['utxos']: OrderedDict()
+        self.ring = OrderedDict({self.id: self.node_dict})
         self.blockchain = Blockchain([self.genesis_block()])
 
     def genesis_block(self):
@@ -61,7 +61,7 @@ class Node:
         	response = json.loads(response.json())
         	self.id = response['id']
         	self.blockchain = Blockchain(response['blockchain']['block_list'])
-        	self.node_dict = response['node_dict']
+        	self.node_dict['utxos'] = OrderedDict(response['utxos'])
         	print("I am in with id " + str(self.id))
         	
         	self.blockchain.validate(self.difficulty)
@@ -85,12 +85,13 @@ class Node:
             return 400, msg, None, None, None
 
         idx = len(self.ring)
+   		node_dict['utxos'] = OrderedDict()
         self.ring[idx] = node_dict
         success, error = self.create_transaction(node_dict['address'], self.NBC)
         if not success:
             return 400, error, None, None, None
         else:
-            return 200, "OK", idx, self.blockchain, self.ring[idx]
+            return 200, "OK", idx, self.blockchain, self.ring[idx]['utxos']
 
     def send_stuff(self, url, data):
             response = r.post(url, data=data)

@@ -40,7 +40,7 @@ class Transaction:
                     raise ValueError("You have no UTXOs")
                 for utxo_id, utxo in node['utxos'].items():
                     self.inputs.append(utxo_id)
-                    change = current_amount + utxo['amount'] - self.amount
+                    change = current_amount + int(utxo['amount']) - int(self.amount)
                     
                     if change == 0:
                         self.add_output(self.receiver_address, self.amount)

@@ -55,13 +55,12 @@ class WelcomeNode(Resource):
 
 	def post(self):
 		node_dict = json.loads(request.form['node'])
-		node_dict['utxos'] = OrderedDict(node_dict['utxos'])
 
-		code, msg, idx, blockchain, node_dict = self.node.register_node_to_ring(node_dict)
+		code, msg, idx, blockchain, utxos = self.node.register_node_to_ring(node_dict)
 		if code != 200:
 			response = {'msg': str(msg)}
 		else:
-			response = {'msg': msg, 'id': idx, 'blockchain': blockchain.to_dict(), 'node_dict' : node_dict}
+			response = {'msg': msg, 'id': idx, 'blockchain': blockchain.to_dict(), 'utxos' : utxos}
 			if idx == self.node.max_nodes - 1:
 				self.node.broadcast_ring()
 		return json.dumps(response), code
