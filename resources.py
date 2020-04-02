@@ -73,7 +73,7 @@ class AllNodesIn(Resource):
 
 	def post(self):
 		ring = OrderedDict(json.loads(request.form['ring']))
-		for node in ring:
+		for node in ring.values():
 			node['utxos'] = OrderedDict(node['utxos'])
 
 		self.node.ring = ring
@@ -98,7 +98,10 @@ class ValidateBlock(Resource):
 		self.node = kwargs['node']
 
 	def post(self):
-		return
+		block_dict = json.loads(request.form['block'])
+		code, msg = self.node.validate_block(block_dict)
+		print(msg)
+		return json.dumps({'msg': msg}), code
 
 
 class ResolveConflict(Resource):
