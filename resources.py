@@ -127,7 +127,7 @@ class ResolveConflict(Resource):
 		# New block *l i e s* in the list
 		# or *p o i n t s* to somewhere in the list excluding the top
 		else:
-			while block.prev_hash[-idx] and idx < len(blockchain.block_list):
+			while block.prev_hash[-idx] != 1 and idx < len(blockchain.block_list):
 				block = blockchain.block_list[-idx]
 				# *l i e s* in the list
 				if block.prev_hash = new_block.hash:
