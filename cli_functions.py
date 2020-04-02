@@ -31,7 +31,7 @@ def HandleRequest(request):
 	msg = request.msg
 	code = request.status_code
 	if code != 200:
-		print("okn't")
+		print('ERROR! Try again later')
 	else:
 		print('ok')
 		print(msg)
