@@ -1,5 +1,6 @@
 import requests
 import json, csv
+import pandas as pd
 
 PORT = 5000
 BASE = f'http://localhost:{PORT}'
@@ -37,8 +38,7 @@ def HandleRequest(request):
 		for key in response.keys():
 			val = response[keys]
 			if val is not None:
-				val = json.loads(val)
-				print(val)
+				print(pd.read_json(val))
 	return
 
 def transaction(args):
@@ -53,6 +53,7 @@ def transaction(args):
 
 def view(args):
 	url = f'{BASE}/transaction/view'
+	data =
 	r = requests.get(url)
 	HandleRequest(r)
 	return 0
