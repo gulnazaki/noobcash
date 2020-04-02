@@ -109,23 +109,41 @@ class ResolveConflict(Resource):
 		new_block = kwargs['new_block']
 		#initialize
 		connected = False
-		block = self.blockchain.block_list[-1]
+		block = blockchain.block_list[-1]
 		idx = 1
-		f_idx = None
-		# while block.prev_hash != 1 and idx < len(blockhain.block_list) + 1:
-		# 	if new_block.prev_hash == block.hash:
-		# 		connected = True
-		# 		f_idx = idx
-		# 	idx += 1
-		# 	block = self.blockhain.block_list[-idx]
-		if new_block.hash == blockchain.block_list[-1].hash
+		pos = None
+		# New block *p o i n t s* to the top of the list
+		if new_block.prev_hash == block.hash:
+			connected = True
+			length = 1 + len(blockchain.block_list)
+			pos = length - 1
+			return connected, length, pos
+		# New block *i s* the top of the list
+		elif new_block.hash == block.hash:
 			connected = True
 			length = len(blockchain.block_list)
-			pos = length
+			pos = length - 1
 			return connected, length, pos
-		length = idx
+		# New block *l i e s* in the list
+		# or *p o i n t s* to somewhere in the list
+		else:
+			while block.prev_hash[-idx] and idx < len(blockchain.block_list):
+				block = blockchain.block_list[-idx]
+				# *l i e s* in the list
+				if block.prev_hash = new_block.hash:
+					connected = True
+					length = len(blockchain.block_list)
+					pos = length - idx
+					break
+				# *p o i n t s* somewhere in the list
+				if not connected and new_block.prev_hash == block:
+					connected = True
+					length = len(block.block_list) - ( idx - 1 ) + 1
+					pos = length - 1
+					break
 
-		return connected, length, f_idx
+				idx+=1
+			return connected, length, pos
 
 	def get(self):
 		return
