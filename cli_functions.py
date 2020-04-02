@@ -33,8 +33,11 @@ def HandleRequest(request):
 	if code != 200:
 		print('ERROR! Try again later')
 	else:
-		print('ok')
-		print(msg)
+		response = request.json()
+		for key in response.keys():
+			val = response[keys]
+			if val is not None:
+				
 	return
 
 def transaction(args):
