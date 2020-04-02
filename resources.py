@@ -127,10 +127,10 @@ class ResolveConflict(Resource):
 		# New block *l i e s* in the list
 		# or *p o i n t s* to somewhere in the list excluding the top
 		else:
-			while block.prev_hash[-idx] != 1 and idx < len(blockchain.block_list):
+			while block.prev_hash[-idx] != 1 and idx < len(blockchain.block_list) + 1 :
 				block = blockchain.block_list[-idx]
 				# *l i e s* in the list
-				if block.prev_hash = new_block.hash:
+				if block.prev_hash == new_block.hash:
 					connected = True
 					length = len(blockchain.block_list)
 					pos = length - idx
