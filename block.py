@@ -19,7 +19,7 @@ class Block:
 			self.mined(nonce, self.my_hash(nonce))
 
 	def my_hash(self, nonce):
-		data = self.to_be_hashed + nonce
+		data = self.to_be_hashed + str(nonce)
 		return sha256(data.encode('ascii')).hexdigest()
 
 	def validate(self, difficulty, prev_hash):
@@ -50,11 +50,12 @@ class Block:
 
 class Blockchain:
 
-	def __init__(self, block_list=[]):
+	def __init__(self, block_list, update_time=True):
+		self.block_list = []
 		for block in block_list:
 			if isinstance(block, dict):
 				block = Block(block['idx'], block['transactions'], block['prev_hash'], block['nonce'], block['hash'], block['timestamp'], block['start_time'])
-			self.add_block(block)
+			self.add_block(block, update_time)
 
 	def validate(self, difficulty):
 		for idx, block in enumerate(self.block_list[1:]):
@@ -82,6 +83,21 @@ class Blockchain:
 	def length(self):
 		return len(self.block_list)
 
-	def add_block(self, block, end_time=time()):
-		block.block_time = end_time - block.start_time
+	def add_block(self, block, update_time=True):
+		if update_time:
+			block.block_time = time() - block.start_time
 		self.block_list.append(block)
+
+	def list_of_hashes(self):
+		return [block.hash for block in self.block_list]
+
+	def index_of_fork(self, other_hashchain):
+		our_hashchain = self.list_of_hashes()
+		for idx, hash_ in enumerate(our_hashchain):
+			if hash_ != other_hashchain[idx]:
+				return idx
+		return self.length()
+
+	def update_utxos(self, ring):
+		transactions = [[[transaction if isinstance(transaction, dict) else transaction.to_dict() for transaction in transactions]\
+		 				for transactions in block] for block in self.block_list]

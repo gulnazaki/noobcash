@@ -22,10 +22,11 @@ class Mining(Thread):
                 else:
                     self.node.lock.acquire()
                     self.node.blockchain.add_block(self.block)
-                    self.node.broadcast_block(self.block.to_dict())
+                    success, msg = self.node.broadcast_block(self.block.to_dict())
+                    print(msg)
                     self.node.tx_pool = [tx for tx in self.node.tx_pool if not tx in self.block.transactions]
 
-                    if len(self.node.tx_pool) >= CAPACITY:
+                    if len(self.node.tx_pool) >= self.node.capacity:
                         self.node.create_new_block()
                     self.node.lock.release()
                     return
@@ -33,7 +34,7 @@ class Mining(Thread):
                 nonce += 1
 
         self.node.lock.acquire()
-        if len(self.node.tx_pool) >= CAPACITY:
+        if len(self.node.tx_pool) >= self.node.capacity:
             self.node.create_new_block()
         self.node.lock.release()
         return

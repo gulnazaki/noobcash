@@ -22,12 +22,12 @@ class Transaction:
 			if self.sender_address == '0':
 				self.add_output(self.receiver_address, self.amount)
 				self.signature = "genesis"
+				self.add_new_utxos(ring)
 			else:
 				self.choose_utxos(ring)
 				self.sign_transaction(sender_private_key)
-
-			self.remove_used_utxos(ring)
-			self.add_new_utxos(ring)
+				self.remove_used_utxos(ring)
+				self.add_new_utxos(ring)
 		# creating one just to validate
 		else:
 			self.inputs = inputs
@@ -70,7 +70,7 @@ class Transaction:
 					if not tx_input in node['utxos']:
 						raise ValueError("Transaction input with id " + tx_input + " is not an unspent transaction")
 					else:
-						del node['utxos'][utxo]
+						del node['utxos'][tx_input]
 					return
 		raise ValueError("Node not found in ring")
 
