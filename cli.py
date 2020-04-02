@@ -1,9 +1,9 @@
 import argparse
 import sys
 from cli_functions import *
-""" 
+"""
 Command line inteface
-t <recipient_address> <amount> : sends a certain amount of noobcash to the given address 
+t <recipient_address> <amount> : sends a certain amount of noobcash to the given address
 view						   : show last verified block of transactions
 balance     				   : show the balance of the user's wallet
 help
