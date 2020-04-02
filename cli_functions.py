@@ -37,7 +37,8 @@ def HandleRequest(request):
 		for key in response.keys():
 			val = response[keys]
 			if val is not None:
-				
+				val = json.loads(val)
+				print(val)
 	return
 
 def transaction(args):
