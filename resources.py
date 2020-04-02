@@ -30,7 +30,7 @@ class ViewTransactions(Resource):
 			tx_list = self.node.view_transactions()
 		except:
 			return json.dumps({'msg': "Error"}), 400
-		
+
 		return json.dumps({'msg': "OK", 'tx_list': tx_list}), 200
 
 
@@ -44,12 +44,12 @@ class Balance(Resource):
 			balance = self.node.wallet_balance()
 		except:
 			return json.dumps({'msg': "Error"}), 400
-		
+
 		return json.dumps({'msg': "OK", 'balance': balance}), 200
 
 
 class WelcomeNode(Resource):
-	
+
 	def __init__(self, **kwargs):
 		self.node = kwargs['node']
 
@@ -75,7 +75,7 @@ class AllNodesIn(Resource):
 		ring = OrderedDict(json.loads(request.form['ring']))
 		for node in ring.values():
 			node['utxos'] = OrderedDict(node['utxos'])
-		
+
 		self.node.ring = ring
 		return json.dumps({'msg': "OK"}), 200
 
@@ -108,6 +108,6 @@ class ResolveConflict(Resource):
 
 	def __init__(self, **kwargs):
 		self.node = kwargs['node']
-
+		self.blockchain = 
 	def get(self):
 		return
