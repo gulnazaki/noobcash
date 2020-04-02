@@ -31,9 +31,10 @@ def HandleRequest(request):
 	msg = request.msg
 	code = request.status_code
 	if code != 200:
-		print('error')
+		print("okn't")
 	else:
-		pass
+		print('ok')
+		print(msg)
 	return
 
 def transaction(args):
@@ -49,9 +50,11 @@ def transaction(args):
 def view(args):
 	url = f'{BASE}/transaction/view'
 	r = requests.get(url)
+	HandleRequest(r)
 	return 0
 
 def balance(args):
 	url = f'{BASE}/wallet/balance'
 	r = requests.get(url)
+	HandleRequest(r)
 	return 0
