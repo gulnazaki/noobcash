@@ -24,7 +24,7 @@ class Node:
 		self.bootstrap_ip = bootstrap_ip
 		self.bootstrap_port = bootstrap_port
 
-		self.ring = None
+		self.ring = {}
 		self.wallet = Wallet()
 		self.tx_pool = []
 		self.node_dict = {'ip': self.ip, 'port': self.port, 'address': self.wallet.address}
@@ -163,7 +163,7 @@ class Node:
 	def validate_transaction(self, tx_dict):
 		try:
 			tx = Transaction(sender_address=tx_dict['sender_address'], sender_private_key=None, receiver_address=tx_dict['receiver_address'],
-								amount=tx_dict['amount'], ring=None, signature=tx_dict['signature'], inputs=tx_dict['inputs'], outputs=tx_dict['outputs'])
+								amount=tx_dict['amount'], ring=self.ring, signature=tx_dict['signature'], inputs=tx_dict['inputs'], outputs=tx_dict['outputs'])
 		except ValueError as e:
 			return 400, str(e)
 		if hasattr(self, 'blockchain'):

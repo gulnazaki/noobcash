@@ -14,6 +14,7 @@ class Transaction:
 		self.receiver_address = receiver_address
 		self.amount = amount
 		self.transaction_id = self.my_hash()
+		self.address_dict = {v['address']: k for k, v in ring.items()}
 		# creating a completely new transaction
 		if not signature:
 			self.inputs = []
@@ -33,7 +34,7 @@ class Transaction:
 			self.inputs = inputs
 			self.outputs = outputs
 			self.verify_signature(signature)
-			# only transactions made after full node participation check and update ring utxos
+			# only transactions validated after full node participation have to check and update ring utxos
 			if ring:
 				self.remove_used_utxos(ring)
 				self.add_new_utxos(ring)
@@ -41,47 +42,47 @@ class Transaction:
 	def choose_utxos(self, ring):
 		current_amount = 0
 		if self.amount == 0: return
-		for node in ring.values():
-			if self.sender_address == node['address']:
-				if not node['utxos']:
-					raise ValueError("You have no UTXOs")
-				for utxo_id, utxo in node['utxos'].items():
-					self.inputs.append(utxo_id)
-					change = current_amount + int(utxo['amount']) - int(self.amount)
-					
-					if change == 0:
-						self.add_output(self.receiver_address, self.amount)
-						return
-					elif change > 0:
-						self.add_output(self.receiver_address, self.amount)
-						self.add_output(self.sender_address, change)
-						return
+		if self.sender_address not in self.address_dict:
+			raise ValueError("Sender doesn't exist in ring")
+		
+		node = ring[self.address_dict[self.sender_address]]
+		if not node['utxos']:
+			raise ValueError("You have no UTXOs")
 
-				raise ValueError("You don't have enough NBCs for this transaction")
+		for utxo_id, utxo in node['utxos'].items():
+			self.inputs.append(utxo_id)
+			change = current_amount + int(utxo['amount']) - int(self.amount)
+			
+			if change == 0:
+				self.add_output(self.receiver_address, self.amount)
+				return
+			elif change > 0:
+				self.add_output(self.receiver_address, self.amount)
+				self.add_output(self.sender_address, change)
+				return
 
-		raise ValueError("Sender doesn't exist in ring")
+			raise ValueError("You don't have enough NBCs for this transaction")
 
 	def remove_used_utxos(self, ring):
 		if not self.inputs:
 			raise ValueError("Transactions require inputs")	
-		for node in ring.values():
-			if node['address'] == self.sender_address:
-				for tx_input in self.inputs:
-					if not tx_input in node['utxos']:
-						raise ValueError("Transaction input with id " + tx_input + " is not an unspent transaction")
-					else:
-						del node['utxos'][tx_input]
-					return
-		raise ValueError("Node not found in ring")
+		if self.sender_address not in self.address_dict:
+			raise ValueError("Sender doesn't exist in ring")
+
+		node = ring[self.address_dict[self.sender_address]]
+		for tx_input in self.inputs:
+			if not tx_input in node['utxos']:
+				raise ValueError("Transaction input with id " + tx_input + " is not an unspent transaction")
+			else:
+				del node['utxos'][tx_input]
+			return
 
 	def add_new_utxos(self, ring):	
 		if not self.outputs:
 			raise ValueError("Transactions require outputs")	
 		for output_id, output in self.outputs.items():
-			for node in ring.values():
-				if output['recipient'] == node['address']:
-					node['utxos'][output_id] = output
-					break
+			node = ring[self.address_dict[output['recipient']]]
+			node['utxos'][output_id] = output
 		return
 
 	def add_output(self, recipient, amount):

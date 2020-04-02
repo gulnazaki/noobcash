@@ -99,5 +99,21 @@ class Blockchain:
 		return self.length()
 
 	def update_utxos(self, ring):
+		for node_dict in ring:
+			node_dict['utxos'] = OrderedDict()
+
 		transactions = [[[transaction if isinstance(transaction, dict) else transaction.to_dict() for transaction in transactions]\
 		 				for transactions in block] for block in self.block_list]
+		address_dict = {v['address']: k for k, v in self.ring.items()}
+
+		for tx in transactions:
+			sender = ring[address_dict[tx['sender_address']]]
+			receiver = ring[address_dict[tx['receiver_address']]]
+			inputs = tx['inputs']
+			outputs = tx['outputs']
+			node = ring[self.address_dict[self.sender_address]]
+			
+			for tx_in in inputs:
+				del node['utxos'][tx_input]
+			for out_id, tx_out in outputs.items():
+				node['utxos'][out_id] = tx_out
