@@ -53,7 +53,6 @@ def transaction(args):
 
 def view(args):
 	url = f'{BASE}/transaction/view'
-	data =
 	r = requests.get(url)
 	HandleRequest(r)
 	return 0
