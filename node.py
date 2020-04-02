@@ -1,12 +1,13 @@
 import requests as r
 from collections import OrderedDict
-from multiprocessing import Process, Pool
+from multiprocessing import Pool
 from threading import Thread
 import json
 
 from wallet import Wallet
 from block import Block, Blockchain
 from transaction import Transaction
+from mining import Mining
 
 
 class Node:
@@ -22,11 +23,12 @@ class Node:
         self.bootstrap_ip = bootstrap_ip
         self.bootstrap_port = bootstrap_port
 
+        self.ring = None
         self.wallet = Wallet()
-        self.tx_pool = OrderedDict()
+        self.tx_pool = []
         self.node_dict = {'ip': self.ip, 'port': self.port, 'address': self.wallet.address}
 
-        self.mine_process = None
+        self.mining_thread = None
 
         if self.bootstrap:
             self.i_am_bootstrap()
@@ -37,7 +39,7 @@ class Node:
 
     def i_am_bootstrap(self):
         self.id = 0
-        self.node_dict['utxos']: OrderedDict()
+        self.node_dict['utxos'] = OrderedDict()
         self.ring = OrderedDict({self.id: self.node_dict})
         self.blockchain = Blockchain([self.genesis_block()])
 
@@ -63,8 +65,11 @@ class Node:
         	self.blockchain = Blockchain(response['blockchain']['block_list'])
         	self.node_dict['utxos'] = OrderedDict(response['utxos'])
         	print("I am in with id " + str(self.id))
-        	
-        	self.blockchain.validate(self.difficulty)
+
+        	valid, msg = self.blockchain.validate(self.difficulty)
+        	if not valid:
+        		print(msg)
+        		exit()
 
     def node_already_exists(self, new_node):
         msg = None
@@ -85,13 +90,13 @@ class Node:
             return 400, msg, None, None, None
 
         idx = len(self.ring)
-   		node_dict['utxos'] = OrderedDict()
+        node_dict['utxos'] = OrderedDict()
         self.ring[idx] = node_dict
         success, error = self.create_transaction(node_dict['address'], self.NBC)
         if not success:
             return 400, error, None, None, None
         else:
-            return 200, "OK", idx, self.blockchain, self.ring[idx]['utxos']
+            return 200, "OK", idx, self.blockchain.to_dict(), self.ring[idx]['utxos']
 
     def send_stuff(self, url, data):
             response = r.post(url, data=data)
@@ -119,25 +124,25 @@ class Node:
 
     def create_transaction(self, recipient, amount):
         try:
-            tx = Transaction(sender_address=self.wallet.address, sender_private_key=self.wallet.private_key, 
+            tx_dict = Transaction(sender_address=self.wallet.address, sender_private_key=self.wallet.private_key, 
                              receiver_address=recipient, amount=amount, ring=self.ring).to_dict()
         except ValueError as e:
             return False, str(e)
         
-        self.add_to_pool(tx)
-        return self.broadcast_transaction(tx)
+        self.add_transaction_to_pool(tx_dict)
+        return self.broadcast_transaction(tx_dict)
 
-    def add_to_pool(self, tx):
-        self.tx_pool[tx['transaction_id']] = tx
+    def add_transaction_to_pool(self, tx_dict):
+        self.tx_pool.append(tx_dict)
 
         if len(self.tx_pool) >= self.capacity:
-            if not self.mine_process or not self.mine_process.is_alive():
+            if not self.mining_thread or not self.mining_thread.is_alive():
                 self.create_new_block()
 
-    def broadcast_transaction(self, tx):
-        success = self.broadcast(data={'tx': json.dumps(tx)}, endpoint='/validate_transaction')
+    def broadcast_transaction(self, tx_dict):
+        success = self.broadcast(data={'tx': json.dumps(tx_dict)}, endpoint='/validate_transaction')
         if success:
-            msg = ("All nodes know about transaction " + tx['transaction_id'] + " now")
+            msg = ("All nodes know about transaction " + tx_dict['transaction_id'] + " now")
         else:
                msg = "Failed broadcasting transaction"
 
@@ -146,40 +151,53 @@ class Node:
     def validate_transaction(self, tx_dict):
         try:
         	tx = Transaction(sender_address=tx_dict['sender_address'], sender_private_key=None, receiver_address=tx_dict['receiver_address'], 
-        						amount=tx_dict['amount'], ring=self.ring, signature=tx_dict['signature'], inputs=tx_dict['inputs'], outputs=tx_dict['outputs'])
+        						amount=tx_dict['amount'], ring=None, signature=tx_dict['signature'], inputs=tx_dict['inputs'], outputs=tx_dict['outputs'])
         except ValueError as e:
         	return 400, str(e)
+        self.add_transaction_to_pool(tx_dict)
         return 200, "Transaction validated"
-
-    def add_transaction_to_block(self):
-        #if enough transactions  mine
-        return
     
     def create_new_block(self):
+        block = Block(idx=self.blockchain.next_index(), transactions=self.tx_pool[:self.capacity], previous_hash=self.blockchain.last_hash())
+        self.mining_thread = Mining(node=self, block=block)
+        self.mining_thread.start()
         return
 
-    def mine_block(self):
-        return
+    def broadcast_block(self, block_dict):
+        success = self.broadcast(data={'block': json.dumps(block_dict)}, endpoint='/validate_block')
+        if success:
+            msg = ("All nodes know about block " + block_dict['idx'] + " now")
+        else:
+               msg = "Failed broadcasting block"
 
-    def broadcast_block(self):
-        return
+        return success, msg
+
+    def validate_block(self, block_dict):
+    	block = Block(idx=block_dict['idx'], transactions=block_dict['transactions'], previous_hash=block_dict['prev_hash'], 
+    						nonce=block_dict['nonce'], hash=block_dict['hash'], timestamp=block_dict['timestamp'], block_time=block_dict['block_time'])
+    	valid, msg = block.validate(self.difficulty, self.blockchain.last_hash())
+    	if valid:
+    		if self.mining_thread and self.mining_thread.is_alive():
+    			self.mining_thread.hash_found.set()    		
+    		self.blockchain.add_block(block)
+    		return 200, msg   
+    	elif "Previous hash does not match" in msg:
+    		msg = self.resolve_conflicts(block)
+    		return 200, msg
+    	else:
+    		return 400, msg 
         
     def wallet_balance(self):
         return sum(utxo['amount'] for utxo in self.node_dict['utxos'].values())
 
     def view_transactions(self):
-        return self.blockchain.block_list[-1].transactions
+        return self.blockchain.last_transactions()
 
-    #def valid_proof(.., difficulty=MINING_DIFFICULTY):
-    #    return
-
-    #consensus functions
-
+    def resolve_conflicts(self, block):
+    	# mplampla ta grafw egw
+        msg = "eixame conflict ekei kai dialeksa auto kai mplampla"
+        return msg
 
     def valid_chain(self, chain):
         #check for the longer chain accroose all nodes
-        return
-
-    def resolve_conflicts(self):
-        #resolve correct chain
         return
