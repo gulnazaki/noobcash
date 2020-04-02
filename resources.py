@@ -105,6 +105,27 @@ class ResolveConflict(Resource):
 
 	def __init__(self, **kwargs):
 		self.node = kwargs['node']
-		self.blockchain = 
+		blockchain = self.node.blockchain
+		new_block = kwargs['new_block']
+		#initialize
+		connected = False
+		block = self.blockchain.block_list[-1]
+		idx = 1
+		f_idx = None
+		# while block.prev_hash != 1 and idx < len(blockhain.block_list) + 1:
+		# 	if new_block.prev_hash == block.hash:
+		# 		connected = True
+		# 		f_idx = idx
+		# 	idx += 1
+		# 	block = self.blockhain.block_list[-idx]
+		if new_block.hash == blockchain.block_list[-1].hash
+			connected = True
+			length = len(blockchain.block_list)
+			pos = length
+			return connected, length, pos
+		length = idx
+
+		return connected, length, f_idx
+
 	def get(self):
 		return

@@ -63,7 +63,7 @@ class Node:
         	self.blockchain = Blockchain(response['blockchain']['block_list'])
         	self.node_dict['utxos'] = OrderedDict(response['utxos'])
         	print("I am in with id " + str(self.id))
-        	
+
         	self.blockchain.validate(self.difficulty)
 
     def node_already_exists(self, new_node):
@@ -81,7 +81,7 @@ class Node:
         if self.max_nodes == len(self.ring):
             return 400, "Sorry we are full, " + str(self.max_nodes) + " nodes at a time", None, None
         msg = self.node_already_exists(node_dict)
-        if msg: 
+        if msg:
             return 400, msg, None, None, None
 
         idx = len(self.ring)
@@ -119,11 +119,11 @@ class Node:
 
     def create_transaction(self, recipient, amount):
         try:
-            tx = Transaction(sender_address=self.wallet.address, sender_private_key=self.wallet.private_key, 
+            tx = Transaction(sender_address=self.wallet.address, sender_private_key=self.wallet.private_key,
                              receiver_address=recipient, amount=amount, ring=self.ring).to_dict()
         except ValueError as e:
             return False, str(e)
-        
+
         self.add_to_pool(tx)
         return self.broadcast_transaction(tx)
 
@@ -145,7 +145,7 @@ class Node:
 
     def validate_transaction(self, tx_dict):
         try:
-        	tx = Transaction(sender_address=tx_dict['sender_address'], sender_private_key=None, receiver_address=tx_dict['receiver_address'], 
+        	tx = Transaction(sender_address=tx_dict['sender_address'], sender_private_key=None, receiver_address=tx_dict['receiver_address'],
         						amount=tx_dict['amount'], ring=self.ring, signature=tx_dict['signature'], inputs=tx_dict['inputs'], outputs=tx_dict['outputs'])
         except ValueError as e:
         	return 400, str(e)
@@ -154,7 +154,7 @@ class Node:
     def add_transaction_to_block(self):
         #if enough transactions  mine
         return
-    
+
     def create_new_block(self):
         return
 
@@ -163,7 +163,7 @@ class Node:
 
     def broadcast_block(self):
         return
-        
+
     def wallet_balance(self):
         return sum(utxo['amount'] for utxo in self.node_dict['utxos'].values())
 
@@ -180,6 +180,20 @@ class Node:
         #check for the longer chain accroose all nodes
         return
 
-    def resolve_conflicts(self):
+    def resolve_conflicts(self, **kwargs):
+        new_block = kwargs['new_block']
+        my_blockchain = self.blockchain
+        iamwrong = False
+        my_length = len(my_blockchain.block_list)
+        for node in nodes:
+            # call Resolve conflict
+            found, l, position = Resolve
+            if found & l > my_length:
+                iamwrong = True
+
+        if iamwrong:
+            #request missing blocks
+
         #resolve correct chain
+
         return
