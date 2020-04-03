@@ -1,6 +1,7 @@
 import requests
 import json, csv
 import pandas as pd
+from pandas import read_json
 
 PORT = 5000
 BASE = f'http://localhost:{PORT}'
@@ -29,16 +30,34 @@ def getPort():
 getPort()
 
 def HandleRequest(request):
-	msg = request.msg
+	# data = json.loads(request.json() )
+	# print( request.status_code )
+	# print( request.json().keys() )
 	code = request.status_code
 	if code != 200:
-		print('ERROR! Try again later')
+		print( f'An Error Occured. Error Code {code}')
 	else:
-		response = request.json()
-		for key in response.keys():
-			val = response[keys]
-			if val is not None:
-				print(pd.read_json(val))
+		data = request.json()
+		keys = list( data.keys() )
+		for key in keys:
+			if key == 'msg':
+				msg = data[key]
+				print(msg)
+			elif key == 'tx_list':
+				print( pd.DataFrame(data[key]))
+	# print( read_json(data[key]) )
+	# print( json.loads(request.text) )
+
+	# msg = request.msg
+	# code = request.status_code
+	# if code != 200:
+	# 	print('ERROR! Try again later')
+	# else:
+	# 	response = request.json()
+	# 	for key in response.keys():
+	# 		val = response[keys]
+	# 		if val is not None:
+	# 			print(pd.read_json(val))
 	return
 
 def transaction(args):
@@ -52,7 +71,7 @@ def transaction(args):
 	return 0
 
 def view(args):
-	url = f'{BASE}/transaction/view'
+	url = f'{BASE}/view_transactions'
 	r = requests.get(url)
 	HandleRequest(r)
 	return 0
