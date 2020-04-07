@@ -6,10 +6,10 @@ from argparse import ArgumentParser
 import requests
 from time import sleep
 from threading import Thread
+import signal
 
 from resources import *
 from node import Node
-
 
 app = Flask(__name__)
 CORS(app)
@@ -30,6 +30,11 @@ def initialize_node():
 	api.add_resource(ResolveConflict, '/resolve_conflict', resource_class_kwargs={'node': running})
 
 	api.init_app(app)
+
+	@app.route('/avg_block')
+	def avg_block():
+		running.write_block_times()
+		return ("written")
 
 @app.route('/')
 def hello():
@@ -60,6 +65,13 @@ if __name__ == '__main__':
 
 	ip = args.ip_addr
 	port = args.port
+	
+	def signal_handler(signum, frame):
+		requests.get('http://' + ip + ':' + port + '/avg_block')
+		exit()
+
+	signal.signal(signal.SIGINT, signal_handler)
+	
 	if not exists('bootstrapconfig.txt'):
 		print('Provide bootstrap\'s IP and port at bootstrapconfig.txt')
 		exit()

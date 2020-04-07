@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 class Block:
 
-	def __init__(self, idx, transactions, previous_hash, nonce=None, hash_=None, timestamp=str(datetime.now()), start_time=time()):
+	def __init__(self, idx, transactions, previous_hash, nonce=None, hash_=None, timestamp=str(datetime.now()), start_time=time(), block_time=None):
 		self.idx = idx
 		self.transactions = transactions
 		self.previous_hash = previous_hash
@@ -15,7 +15,9 @@ class Block:
 		self.timestamp = timestamp
 		self.start_time = start_time
 		self.to_be_hashed = self.timestamp + self.previous_hash + ''.join([dumps(tx) for tx in self.transactions])
-		if self.idx == 0:
+		if block_time:
+			self.block_time = block_time
+		if self.previous_hash == '1':
 			self.mined(nonce, self.my_hash(nonce))
 
 	def my_hash(self, nonce):
@@ -41,6 +43,8 @@ class Block:
 		d['hash'] = self.hash
 		d['timestamp'] = self.timestamp
 		d['start_time'] = self.start_time
+		if hasattr(self,'block_time'):
+			d['block_time'] = self.block_time
 		return d
 
 	def mined(self, correct_nonce, correct_hash):
@@ -54,11 +58,13 @@ class Blockchain:
 		self.block_list = []
 		for block in block_list:
 			if isinstance(block, dict):
-				block = Block(block['idx'], block['transactions'], block['prev_hash'], block['nonce'], block['hash'], block['timestamp'], block['start_time'])
+				block = Block(block['idx'], block['transactions'], block['prev_hash'], block['nonce'], block['hash'], block['timestamp'], block['start_time'], block['block_time'])
 			self.add_block(block, update_time)
 
 	def validate(self, difficulty):
-		for idx, block in enumerate(self.block_list[1:]):
+		for idx, block in enumerate(self.block_list):
+			if block.previous_hash == '1':
+				continue
 			prev_hash = self.block_list[idx-1].hash
 			valid, msg = block.validate(difficulty, prev_hash)
 			if not valid:
@@ -77,6 +83,13 @@ class Blockchain:
 	def last_transactions(self):
 		return self.block_list[-1].transactions
 
+	def all_transactions(self, idx=0):
+		f = lambda tx : tx if isinstance(tx, dict) else tx.to_dict()
+		if idx >= 0:
+			return [f(tx) for block in self.block_list[idx:] for tx in block.transactions]
+		else:
+			return [f(tx) for block in self.block_list[:-idx] for tx in block.transactions]
+
 	def next_index(self):
 		return self.block_list[-1].idx + 1
 
@@ -88,6 +101,11 @@ class Blockchain:
 			block.block_time = time() - block.start_time
 		self.block_list.append(block)
 
+	def block_time(self):
+		blocks = [block for block in self.block_list if hasattr(block,'block_time')]
+		total_time = sum([block.block_time for block in blocks])
+		return total_time/len(blocks), len(blocks)
+
 	def list_of_hashes(self):
 		return [block.hash for block in self.block_list]
 
@@ -97,23 +115,3 @@ class Blockchain:
 			if hash_ != other_hashchain[idx]:
 				return idx
 		return self.length()
-
-	def update_utxos(self, ring):
-		for node_dict in ring:
-			node_dict['utxos'] = OrderedDict()
-
-		transactions = [[[transaction if isinstance(transaction, dict) else transaction.to_dict() for transaction in transactions]\
-		 				for transactions in block] for block in self.block_list]
-		address_dict = {v['address']: k for k, v in self.ring.items()}
-
-		for tx in transactions:
-			sender = ring[address_dict[tx['sender_address']]]
-			receiver = ring[address_dict[tx['receiver_address']]]
-			inputs = tx['inputs']
-			outputs = tx['outputs']
-			node = ring[self.address_dict[self.sender_address]]
-			
-			for tx_in in inputs:
-				del node['utxos'][tx_input]
-			for out_id, tx_out in outputs.items():
-				node['utxos'][out_id] = tx_out

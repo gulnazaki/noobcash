@@ -2,6 +2,8 @@ from flask import jsonify, request
 from flask_restful import Resource
 from collections import OrderedDict
 import json
+from threading import Thread
+
 from block import Blockchain
 
 
@@ -63,7 +65,8 @@ class WelcomeNode(Resource):
 		else:
 			response = {'msg': msg, 'id': idx, 'blockchain': blockchain, 'utxos' : utxos}
 			if idx == self.node.max_nodes - 1:
-				self.node.broadcast_ring()
+				t = Thread(target=self.node.broadcast_ring)
+				t.start()
 		return json.dumps(response), code
 
 
@@ -72,12 +75,20 @@ class AllNodesIn(Resource):
 	def __init__(self, **kwargs):
 		self.node = kwargs['node']
 
+	def get(self):
+		idx = request.args.get('idx')
+		self.node.ring[int(idx)]['ready'] = True
+		if not self.node.ring[0]['ready']:
+			return "wait", 401
+		else:
+			return "OK", 200
+
 	def post(self):
 		ring = OrderedDict(json.loads(request.form['ring']))
 		for node in ring.values():
 			node['utxos'] = OrderedDict(node['utxos'])
 
-		self.node.ring = ring
+		self.node.ring = dict((int(k), v) for (k, v) in ring.items())
 		return json.dumps({'msg': "OK"}), 200
 
 
@@ -111,18 +122,16 @@ class ResolveConflict(Resource):
 		self.node = kwargs['node']
 
 	def post(self):
-		my_index = self.idx
-		length = self.node.blockchain.length()
-		list_of_hashes = self.node.blockchain.list_of_hashes()
-		try:
-			block_index =  list_of_hashes.index(new_block['hash'])
-		except:
-			block_index = -1
-
-		return json.dumps({'msg': (length, list_of_hashes, block_index, my_index)}), 200
+		my_index = self.node.id
+		
+		with self.node.resolve_lock:
+			length = self.node.blockchain.length()
+			list_of_hashes = self.node.blockchain.list_of_hashes()
+		return json.dumps({'msg': (length, list_of_hashes, my_index)}), 200
 
 	def get(self):
-		idx = request.args.get('idx')
-		blockchain = Blockchain(self.blockchain.block_list[idx:]).to_dict()['block_list']
+		idx = int(request.args.get('idx'))
+		with self.node.resolve_lock:
+			blockchain = Blockchain(self.node.blockchain.block_list[idx:]).to_dict()['block_list']
 
 		return json.dumps({'blockchain': blockchain}), 200

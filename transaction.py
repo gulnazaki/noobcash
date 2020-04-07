@@ -61,7 +61,7 @@ class Transaction:
 				self.add_output(self.sender_address, change)
 				return
 
-			raise ValueError("You don't have enough NBCs for this transaction")
+		raise ValueError("You don't have enough NBCs for this transaction")
 
 	def remove_used_utxos(self, ring):
 		if not self.inputs:
@@ -72,7 +72,7 @@ class Transaction:
 		node = ring[self.address_dict[self.sender_address]]
 		for tx_input in self.inputs:
 			if not tx_input in node['utxos']:
-				raise ValueError("Transaction input with id " + tx_input + " is not an unspent transaction")
+				raise ValueError("Transaction input with id " + tx_input + " is not an unspent transaction for " + str(self.transaction_id))
 			else:
 				del node['utxos'][tx_input]
 			return
