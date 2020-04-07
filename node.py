@@ -257,10 +257,14 @@ class Node:
 		self.chain_lock.acquire()
 		valid, msg = block.validate(self.difficulty, self.blockchain.last_hash())
 		if valid:
-			if self.ring:
-				with self.utxo_lock:
-					with self.tx_pool_lock:
-						self.resolve_tx(new_txs=block.transactions)
+			# if self.ring:
+			# 	with self.utxo_lock:
+			# 		with self.tx_pool_lock:
+			# 			if not self.resolve_tx(new_txs=block.transactions)[0]:
+			# 				self.chain_lock.release()
+			# 				return 400, "Block contains invalid transactions"
+			with self.tx_pool_lock:
+				self.tx_pool = [tx for tx in self.tx_pool if not tx in block_dict['transactions']]
 			if self.mining_thread and self.mining_thread.is_alive():
 				self.mining_thread.hash_found.set()
 			self.blockchain.add_block(block)
@@ -350,10 +354,14 @@ class Node:
 			file.write('Average block time is  ' + str(avg) + ' seconds, for ' + str(blocks) + 'blocks\n')
 
 	def wallet_balance(self):
-		return sum(utxo['amount'] for utxo in self.ring[self.id]['utxos'].values())
+		with self.utxo_lock:
+			balance = sum(utxo['amount'] for utxo in self.ring[self.id]['utxos'].values())
+		return balance
 
 	def view_transactions(self):
-		return self.blockchain.last_transactions()
+		with self.chain_lock:
+			last = self.blockchain.last_transactions()
+		return last
 
 
 def send_stuff(url, data):

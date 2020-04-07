@@ -60,6 +60,8 @@ class Transaction:
 				self.add_output(self.receiver_address, self.amount)
 				self.add_output(self.sender_address, change)
 				return
+			else:
+				current_amount +=int(utxo['amount'])
 
 		raise ValueError("You don't have enough NBCs for this transaction")
 
@@ -75,7 +77,7 @@ class Transaction:
 				raise ValueError("Transaction input with id " + tx_input + " is not an unspent transaction for " + str(self.transaction_id))
 			else:
 				del node['utxos'][tx_input]
-			return
+		return
 
 	def add_new_utxos(self, ring):	
 		if not self.outputs:
