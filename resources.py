@@ -13,7 +13,10 @@ class CreateTransaction(Resource):
 		self.node = kwargs['node']
 
 	def post(self):
-		recipient = request.form['recipient']
+		if 'address' in request.form:
+			recipient = request.form['address']
+		elif 'id' in request.form:
+			recipient = self.ring[int(request.form['id'])]['address']
 		amount = request.form['amount']
 
 		success, msg = self.node.create_transaction(recipient, amount)

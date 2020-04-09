@@ -16,7 +16,7 @@ from mining import Mining
 
 class Node:
 
-	def __init__(self, ip, port, is_bootstrap, max_nodes, NBC, capacity, difficulty, bootstrap_ip, bootstrap_port):
+	def __init__(self, ip, port, is_bootstrap, max_nodes, NBC, capacity, difficulty, bootstrap_ip, bootstrap_port, transactions):
 		self.ip = ip
 		self.port = port
 		self.bootstrap = is_bootstrap
@@ -91,7 +91,8 @@ class Node:
 					code = 401
 				sleep(3)
 				if code == 200: break
-			self.start_transactions()
+			if self.transactions:
+				self.start_transactions()
 
 	def node_already_exists(self, new_node):
 		msg = None
@@ -155,8 +156,9 @@ class Node:
 			exit()
 		else:
 			print("All nodes are informed, let\'s start")
-			t = Thread(target=self.start_transactions)
-			t.start()
+			if self.transactions:
+				t = Thread(target=self.start_transactions)
+				t.start()
 			self.ring[0]['ready'] = True
 
 	def broadcast_transaction(self, tx_dict):

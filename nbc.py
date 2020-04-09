@@ -17,7 +17,7 @@ api = Api()
 
 @app.before_first_request
 def initialize_node():
-	running = Node(ip, port, args.bootstrap, args.max_nodes, args.NBC, args.capacity, args.difficulty, bootstrap_ip, bootstrap_port)
+	running = Node(ip, port, args.bootstrap, args.max_nodes, args.NBC, args.capacity, args.difficulty, bootstrap_ip, bootstrap_port, args.transactions)
 
 	api.add_resource(CreateTransaction, '/create_transaction', resource_class_kwargs={'node': running})
 	api.add_resource(ViewTransactions, '/view_transactions', resource_class_kwargs={'node': running})
@@ -60,6 +60,7 @@ if __name__ == '__main__':
 	parser.add_argument('-nbc', '--NBC', default=100, type=int, help='The number of NBCs each node will have when they all connect')
 	parser.add_argument('-c', '--capacity', default=1, type=int, help='How many transactions per block')
 	parser.add_argument('-df', '--difficulty', default=4, type=int, help='How many zeros a block\'s hash must start with to be considered solved')
+	parser.add_argument('-tx', '--transactions', action='store_true', help='Start running the transactions txts')
 	parser.add_argument('-d', '--debug', action='store_true', help='Run Flask in debug mode')
 	args = parser.parse_args()
 
