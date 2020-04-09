@@ -16,8 +16,10 @@ class CreateTransaction(Resource):
 		if 'address' in request.form:
 			recipient = request.form['address']
 		elif 'id' in request.form:
-			recipient = self.ring[int(request.form['id'])]['address']
-		amount = request.form['amount']
+			recipient = self.node.ring[int(request.form['id'])]['address']
+		else:
+			return json.dumps({'msg': "No receiver", 'my_id': self.node.id, 'ring': json.dumps(self.node.ring)}), 404
+		amount = int(request.form['amount'])
 
 		success, msg = self.node.create_transaction(recipient, amount)
 		if success: code = 200

@@ -26,6 +26,7 @@ class Node:
 		self.difficulty = difficulty
 		self.bootstrap_ip = bootstrap_ip
 		self.bootstrap_port = bootstrap_port
+		self.transactions = transactions
 
 		self.ring = {}
 		self.wallet = Wallet()
