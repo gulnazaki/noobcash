@@ -58,26 +58,48 @@ def HandleRequest(request):
 			key = 'balance'
 			print(f'My balance is: {data[key]}')
 		else:
-			print(data)
+			for key in data.keys():
+				print(data[key])
+	#handle wrong transaction address
+	if code == 404:
+		data = request.json()
+		if not isinstance(data, dict ):
+			try:
+				data = ast.literal_eval(data)
+			except:
+				pass
+		print(data['msg'])
+		print('Try locating your receiver through the following info in the ring :)\n(You can also locate the following table in the file "my_adressbook.csv")')
+		ring = data['ring']
+		if not isinstance(ring, dict ):
+			try:
+				ring =json.loads(ring)
+				df = pd.DataFrame(ring).transpose()
+				print(df)
+				df.to_csv('my_adressbook.csv')
+			except:
+				ring = ast.literal_eval(ring)
+				print(ring)
+		# print(pd.DataFrame(data['ring']))
+		# if 'ring' in keys:
+			# print(data['ring'])
 	return
 
 def transaction(args):
 	global PORT
 	global BASE
 	PORT = args.sender_port
-	BASE_IP = args.sender_addr
-	print(type(BASE_IP))
+	BASE_IP = args.sender_ip
 	BASE = f'{BASE_IP}:{PORT}'
 	url = f'http://{BASE}/create_transaction'
-	print( url)
 	recip_addr = args.recip_addr
-	recip_port = args.recip_port
-	amount = args.amount
-	# if isinstance( recip_addr, list):
-	# 	if l
-	# print(type(recip_port), type(PORT))
-	print(type(f'{recip_addr}:{recip_port}'))
-	data = { 'recipient':f'{recip_addr}:{recip_port}', 'amount':amount}
+	recip_id = args.recip_id[0]
+	amount = args.amount[0]
+	keys = ['recipient', 'id', 'amount']
+	vals = [recip_addr, recip_id, amount]
+	keys = [ k for k,v in zip(keys, vals) if not v is None ]
+	vals = [ v for v in vals if not v is None ]
+	data = dict( zip(keys, vals) )
 	r = requests.post(url, data = data)
 	HandleRequest(r)
 	return 0
