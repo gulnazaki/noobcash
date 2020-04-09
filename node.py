@@ -139,7 +139,7 @@ class Node:
 			p.close()
 			p.join()
 			exit()
-		
+
 		successful = sum(successes) == num_of_nodes
 		return successful, list(msg_list)
 
@@ -218,7 +218,7 @@ class Node:
 	def add_transaction_to_pool(self, tx_dict):
 		with self.tx_pool_lock:
 			if tx_dict not in self.tx_pool+self.blockchain.all_transactions():
-				self.tx_pool.append(tx_dict)	
+				self.tx_pool.append(tx_dict)
 			poolsize = len(self.tx_pool)
 			transactions = self.tx_pool[:self.capacity]
 		if poolsize >= self.capacity:
@@ -276,7 +276,7 @@ class Node:
 				return 200, msg + ", but I already have this block"
 			code, resolve_msg = self.resolve_conflicts()
 			self.chain_lock.release()
-			return code, msg + resolve_msg 
+			return code, msg + resolve_msg
 		else:
 			self.chain_lock.release()
 			return 400, msg
@@ -318,7 +318,7 @@ class Node:
 		temp_ring = deepcopy(self.ring)
 		for node_dict in temp_ring.values():
 			node_dict['utxos'] = OrderedDict()
-		
+
 		f = lambda tx : tx if isinstance(tx, dict) else tx.to_dict()
 		transactions = [f(tx) for block in self.blockchain.block_list for tx in block.transactions]
 
@@ -337,7 +337,7 @@ class Node:
 			if tx['signature'] == "genesis":
 				continue
 
-			sender = temp_ring[address_dict[tx['sender_address']]]			
+			sender = temp_ring[address_dict[tx['sender_address']]]
 			for tx_in in inputs:
 				if tx_in in sender['utxos']:
 					del sender['utxos'][tx_in]

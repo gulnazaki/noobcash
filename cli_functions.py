@@ -5,11 +5,12 @@ from pandas import read_json
 import ast
 
 PORT = 5000
-BASE = f'http://localhost:{PORT}'
+BASE_IP = f'http://localhost'
+BASE = f'{BASE_IP}:{PORT}'
 
 def getPort():
 	global PORT
-	global BASE
+	global BASE_IP
 	try:
 		keys = []
 		vals = []
@@ -22,13 +23,13 @@ def getPort():
 				vals.append(v)
 				if k.lower() == 'PORT'.lower():
 					PORT = v
-					BASE = f'http://localhost:{PORT}'
+					BASE = f'{BASE_IP}:{PORT}'
 					break
 			# config_dict = dict( zip(keys, vals ))
 	except:
 		pass
 
-getPort()
+# getPort()
 
 def HandleRequest(request):
 
@@ -61,23 +62,47 @@ def HandleRequest(request):
 	return
 
 def transaction(args):
+	global PORT
+	global BASE
+	PORT = args.sender_port
+	BASE_IP = args.sender_addr
+	print(type(BASE_IP))
+	BASE = f'{BASE_IP}:{PORT}'
+	url = f'http://{BASE}/create_transaction'
+	print( url)
 	recip_addr = args.recip_addr
-	sender_addr = args.sender_addr
+	recip_port = args.recip_port
 	amount = args.amount
-	url = f'{BASE}/create_transaction'
-	data = { 'recipient':recip_addr, 'amount':amount}
+	# if isinstance( recip_addr, list):
+	# 	if l
+	# print(type(recip_port), type(PORT))
+	print(type(f'{recip_addr}:{recip_port}'))
+	data = { 'recipient':f'{recip_addr}:{recip_port}', 'amount':amount}
 	r = requests.post(url, data = data)
 	HandleRequest(r)
 	return 0
 
 def view(args):
+	global PORT
+	global BASE
+	getPort()
 	url = f'{BASE}/view_transactions'
 	r = requests.get(url)
 	HandleRequest(r)
 	return 0
 
 def balance(args):
-	url = f'{BASE}/balance'
+	global PORT
+	global BASE
+	global BASE_IP
+	try:
+		BASE_IP = args.my_addr
+		PORT = args.my_port
+		BASE = f'{BASE_IP}:{PORT}'
+	except:
+		getPort()
+	url = f'http://{BASE}/balance'
+	print(url)
 	r = requests.get(url)
 	HandleRequest(r)
 	return 0
