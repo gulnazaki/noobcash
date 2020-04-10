@@ -5,15 +5,20 @@ from Cryptodome.Hash import SHA
 from Cryptodome.Signature import PKCS1_v1_5
 from Cryptodome.PublicKey import RSA
 import json
+from datetime import datetime
 
 
 class Transaction:
 
-	def __init__(self, sender_address, sender_private_key, receiver_address, amount, ring, signature=None, inputs=None, outputs=None):
+	def __init__(self, sender_address, sender_private_key, receiver_address, amount, ring, signature=None, inputs=None, outputs=None, tx_id=None):
 		self.sender_address = sender_address
 		self.receiver_address = receiver_address
 		self.amount = amount
-		self.transaction_id = self.my_hash()
+		if not tx_id:
+			self.timestamp = str(datetime.now())
+			self.transaction_id = self.my_hash()
+		else:
+			self.transaction_id = tx_id
 		self.address_dict = {v['address']: k for k, v in ring.items()}
 		# creating a completely new transaction
 		if not signature:
@@ -106,7 +111,7 @@ class Transaction:
 		return d
 
 	def my_hash(self):
-		data = self.sender_address + self.receiver_address + str(self.amount)
+		data = self.timestamp + self.sender_address + self.receiver_address + str(self.amount)
 		return sha256(data.encode('ascii')).hexdigest()        
 
 	def sign_transaction(self, sender_private_key):

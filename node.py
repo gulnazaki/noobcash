@@ -243,7 +243,8 @@ class Node:
 		try:
 			self.utxo_lock.acquire()
 			tx = Transaction(sender_address=tx_dict['sender_address'], sender_private_key=None, receiver_address=tx_dict['receiver_address'],
-								amount=tx_dict['amount'], ring=self.ring, signature=tx_dict['signature'], inputs=tx_dict['inputs'], outputs=tx_dict['outputs'])
+								amount=tx_dict['amount'], ring=self.ring, signature=tx_dict['signature'], inputs=tx_dict['inputs'],
+								outputs=tx_dict['outputs'], tx_id=tx_dict['transaction_id'])
 		except ValueError as e:
 			self.utxo_lock.release()
 			return 400, str(e)

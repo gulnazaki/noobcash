@@ -6,14 +6,16 @@ from collections import OrderedDict
 
 class Block:
 
-	def __init__(self, idx, transactions, previous_hash, nonce=None, hash_=None, timestamp=str(datetime.now()), start_time=time(), block_time=None):
+	def __init__(self, idx, transactions, previous_hash, nonce=None, hash_=None, timestamp=None, start_time=None, block_time=None):
+		if not timestamp: self.timestamp = str(datetime.now())
+		else: self.timestamp = timestamp
+		if not start_time: self.start_time = time()
+		else: self.start_time = start_time
 		self.idx = idx
 		self.transactions = transactions
 		self.previous_hash = previous_hash
 		self.nonce = nonce
 		self.hash = hash_
-		self.timestamp = timestamp
-		self.start_time = start_time
 		self.to_be_hashed = self.timestamp + self.previous_hash + ''.join([dumps(tx) for tx in self.transactions])
 		if block_time:
 			self.block_time = block_time
