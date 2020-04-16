@@ -14,3 +14,9 @@ pip install -r requirements.txt
 ```
 python nbc.py --ip-addr [--port] [--bootstrap] [--max-nodes] [--NBC] [--capacity] [--difficulty]
 ```
+## Basic CLI usage
+```
+python cli.py t [-sender_ip] [-sender_port] -amount -recip_addr (or recip_id)
+python cli.py view
+python cli.py balance [-my_ip] [-my_port]
+```

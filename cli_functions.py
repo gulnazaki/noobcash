@@ -118,7 +118,7 @@ def balance(args):
 	global BASE
 	global BASE_IP
 	try:
-		BASE_IP = args.my_addr
+		BASE_IP = args.my_ip
 		PORT = args.my_port
 		BASE = f'{BASE_IP}:{PORT}'
 	except:
